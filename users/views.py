@@ -4,7 +4,8 @@ from leaderboard.leaderboard import Leaderboard
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+
+# from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -17,7 +18,7 @@ redis_mlsa_leaderboard = Leaderboard(leaderboard_name)
 
 
 class UserCreate(generics.CreateAPIView):
-    throttle_classes = [AnonRateThrottle]
+    # throttle_classes = [AnonRateThrottle]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -51,7 +52,7 @@ class UserCreate(generics.CreateAPIView):
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
-    throttle_classes = [AnonRateThrottle]
+    # throttle_classes = [AnonRateThrottle]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -65,7 +66,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 class MyTokenRefreshView(TokenRefreshView):
-    throttle_classes = [AnonRateThrottle]
+    # throttle_classes = [AnonRateThrottle]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

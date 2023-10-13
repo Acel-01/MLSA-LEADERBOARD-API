@@ -79,7 +79,6 @@ class SubmitCreateView(APIView):
 
 
 class LeaderboardView(APIView):
-    throttle_classes = []
     permission_classes = []
 
     def get(self, request):
