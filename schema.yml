@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: MLSA LEADERBOARD API
+  version: 1.0.0
+  description: A leaderboard to track MLSA's hacktoberfest participants contributions.
+paths:
+  /api/v1/leaderboard/:
+    get:
+      operationId: v1_leaderboard_retrieve
+      description: List of the current top (20) participants
+      parameters:
+      - in: query
+        name: ending_rank
+        schema:
+          type: string
+        description: Filter by position
+      - in: query
+        name: starting_rank
+        schema:
+          type: string
+        description: Filter by position
+      tags:
+      - Leaderboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leaderboard'
+          description: Leaders fetched successfully
+  /api/v1/leaderboard/me/:
+    get:
+      operationId: v1_leaderboard_me_retrieve
+      description: Score and Rank, as well as other details of the logged in user
+      tags:
+      - Leaderboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyRank'
+          description: Score and Rank fetched successfully
+  /api/v1/leaderboard/submit/:
+    post:
+      operationId: v1_leaderboard_submit_create
+      description: Submit a Pull Request
+      tags:
+      - Leaderboard
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Submit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Submit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Submit'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submit'
+          description: Pull Request submitted successfully
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitError'
+          description: Validation Error
+  /api/v1/users/create/:
+    post:
+      operationId: v1_users_create_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreatePasswordRetype'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreatePasswordRetype'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreatePasswordRetype'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreatePasswordRetype'
+          description: ''
+  /api/v1/users/token/:
+    post:
+      operationId: v1_users_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/users/token/refresh/:
+    post:
+      operationId: v1_users_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+components:
+  schemas:
+    Leaderboard:
+      type: object
+      properties:
+        member:
+          type: string
+          maxLength: 200
+        rank:
+          type: integer
+        score:
+          type: number
+          format: double
+      required:
+      - member
+      - rank
+      - score
+    MyRank:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        username:
+          type: string
+          maxLength: 255
+        total_points:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: The amount of points this user has accumulated
+      required:
+      - email
+      - total_points
+      - username
+      - uuid
+    Submit:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        pr_link:
+          type: string
+          format: uri
+          maxLength: 2000
+        points:
+          type: integer
+          readOnly: true
+          description: The points value for the submitted PR
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_created
+      - points
+      - pr_link
+      - user
+      - uuid
+    SubmitError:
+      type: object
+      properties:
+        pr_link:
+          type: array
+          items:
+            type: string
+            maxLength: 200
+      required:
+      - pr_link
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    User:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        username:
+          type: string
+          maxLength: 255
+        total_points:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: The amount of points this user has accumulated
+      required:
+      - email
+      - total_points
+      - username
+      - uuid
+    UserCreatePasswordRetype:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        username:
+          type: string
+          maxLength: 255
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        password:
+          type: string
+          writeOnly: true
+        re_password:
+          type: string
+      required:
+      - email
+      - password
+      - re_password
+      - username
+      - uuid
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

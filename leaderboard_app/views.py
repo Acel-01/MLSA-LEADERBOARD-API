@@ -1,11 +1,17 @@
 import requests
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from leaderboard.leaderboard import Leaderboard
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from leaderboard_app.models import Submit
-from leaderboard_app.serializers import SubmitSerializer
+from leaderboard_app.serializers import (
+    LeaderboardSerializer,
+    MyRankSerializer,
+    SubmitErrorSerializer,
+    SubmitSerializer,
+)
 
 leaderboard_name = "mlsa-leaderboard"
 redis_mlsa_leaderboard = Leaderboard(leaderboard_name)
@@ -19,6 +25,21 @@ class SubmitCreateView(APIView):
     serializer_class = SubmitSerializer
     lookup_field = "uuid"
 
+    @extend_schema(
+        request=serializer_class,
+        responses={
+            200: OpenApiResponse(
+                response=SubmitSerializer,
+                description="Pull Request submitted successfully",
+            ),
+            400: OpenApiResponse(
+                response=SubmitErrorSerializer,
+                description="Validation Error",
+            ),
+        },
+        tags=["Leaderboard"],
+        description="Submit a Pull Request",
+    )
     def post(self, request):
         # Remove trailing slash do that all pr_link entries are uniform
         if request.data.get("pr_link")[-1] == "/":
@@ -80,7 +101,33 @@ class SubmitCreateView(APIView):
 
 class LeaderboardView(APIView):
     permission_classes = []
+    serializer_class = LeaderboardSerializer
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="starting_rank",
+                description="Filter by position",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="ending_rank",
+                description="Filter by position",
+                required=False,
+                type=str,
+            ),
+        ],
+        request=serializer_class,
+        responses={
+            200: OpenApiResponse(
+                response=LeaderboardSerializer,
+                description="Leaders fetched successfully",
+            ),
+        },
+        tags=["Leaderboard"],
+        description="List of the current top (20) participants",
+    )
     def get(self, request):
         starting_rank = request.GET.get("starting_rank", 1)
         ending_rank = request.GET.get("ending_rank", 20)
@@ -92,3 +139,30 @@ class LeaderboardView(APIView):
         )
 
         return Response(leaders)
+
+
+class MyRankView(APIView):
+    serializer_class = MyRankSerializer
+    lookup_field = "uuid"
+
+    @extend_schema(
+        request=serializer_class,
+        responses={
+            200: OpenApiResponse(
+                response=MyRankSerializer,
+                description="Score and Rank fetched successfully",
+            ),
+        },
+        tags=["Leaderboard"],
+        description="Score and Rank, as well as other details of the logged in user",
+    )
+    def get(self, request):
+        user_obj = request.user
+        serializer = self.serializer_class(user_obj, context={"request": request})
+
+        score_and_rank = redis_mlsa_leaderboard.score_and_rank_for_in(
+            leaderboard_name=leaderboard_name, member=request.user.username
+        )
+        data = serializer.data
+        data["rank"] = score_and_rank.get("rank")
+        return Response(data=data, status=status.HTTP_200_OK)
