@@ -43,21 +43,28 @@ Follow these steps to set up and run the Django project:
 
     touch .env
 
-**5. Activate the virtual environment:**
+
+**5. Create a SECRET_KEY value for your app by running the following command at a terminal prompt:**
+
+    python -c 'import secrets; print(secrets.token_hex())'
+
+Set the returned value as the value of SECRET_KEY in the .env file
+
+**6. Activate the virtual environment:**
 
     pipenv shell
 
 
-**6. Apply database migrations:**
+**7. Apply database migrations:**
 
     python manage.py migrate
 
 
-**7. Start the development server:**
+**8. Start the development server:**
 
     python manage.py runserver
 
-**8. Start Redis server:**
+**9. Start Redis server:**
 
     sudo service redis-server start
 

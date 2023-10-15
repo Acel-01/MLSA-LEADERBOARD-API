@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "djoser",
     "drf_spectacular",
+    "corsheaders",
     # local
     "users",
     "leaderboard_app",
@@ -53,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -84,12 +87,20 @@ WSGI_APPLICATION = "mlsa_leaderboard.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+
+if config("DJANGO_DEBUG", default=False, cast=bool) is True:
+    DATABASES = {"default": dj_database_url.config(default="sqlite:///db.sqlite3")}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME"),
+            "HOST": config("DB_HOST"),
+            "USER": config("DB_USER"),
+            "PASSWORD": config("DB_PASS"),
+            "OPTIONS": {"sslmode": "require"},
+        }
     }
-}
 
 
 # Password validation
@@ -164,3 +175,7 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     # OTHER SETTINGS
 }
+
+CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
+
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")

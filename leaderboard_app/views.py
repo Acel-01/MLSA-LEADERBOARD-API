@@ -1,6 +1,8 @@
 import requests
+from decouple import config
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from leaderboard.leaderboard import Leaderboard
+from redis import ConnectionPool
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,8 +15,13 @@ from leaderboard_app.serializers import (
     SubmitSerializer,
 )
 
+REDIS_HOST = config("REDIS_HOST", default="localhost")
+REDIS_PORT = config("REDIS_PORT", default=6379)
+REDIS_PASSWORD = config("REDIS_PASSWORD", default=None)
+
 leaderboard_name = "mlsa-leaderboard"
-redis_mlsa_leaderboard = Leaderboard(leaderboard_name)
+pool = ConnectionPool.from_url(f"redis://{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0")
+redis_mlsa_leaderboard = Leaderboard(leaderboard_name, connection_pool=pool)
 
 
 class SubmitCreateView(APIView):
