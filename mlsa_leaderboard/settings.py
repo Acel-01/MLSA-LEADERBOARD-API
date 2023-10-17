@@ -15,6 +15,8 @@ from pathlib import Path
 
 import dj_database_url
 from decouple import config
+from leaderboard.leaderboard import Leaderboard
+from redis import ConnectionPool
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -179,3 +181,12 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
 
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")
+
+# REDIS
+REDIS_HOST = config("REDIS_HOST", default="localhost")
+REDIS_PORT = config("REDIS_PORT", default=6379)
+REDIS_PASSWORD = config("REDIS_PASSWORD", default=None)
+
+leaderboard_name = "mlsa-leaderboard"
+pool = ConnectionPool.from_url(f"redis://{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0")
+redis_mlsa_leaderboard = Leaderboard(leaderboard_name, connection_pool=pool)

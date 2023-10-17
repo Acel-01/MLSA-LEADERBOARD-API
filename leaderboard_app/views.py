@@ -1,8 +1,5 @@
 import requests
-from decouple import config
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
-from leaderboard.leaderboard import Leaderboard
-from redis import ConnectionPool
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,18 +7,11 @@ from rest_framework.views import APIView
 from leaderboard_app.models import Submit
 from leaderboard_app.serializers import (
     LeaderboardSerializer,
-    MyRankSerializer,
     SubmitErrorSerializer,
     SubmitSerializer,
 )
-
-REDIS_HOST = config("REDIS_HOST", default="localhost")
-REDIS_PORT = config("REDIS_PORT", default=6379)
-REDIS_PASSWORD = config("REDIS_PASSWORD", default=None)
-
-leaderboard_name = "mlsa-leaderboard"
-pool = ConnectionPool.from_url(f"redis://{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0")
-redis_mlsa_leaderboard = Leaderboard(leaderboard_name, connection_pool=pool)
+from mlsa_leaderboard.settings import leaderboard_name, redis_mlsa_leaderboard
+from users.serializers import UserSerializer
 
 
 class SubmitCreateView(APIView):
@@ -149,14 +139,14 @@ class LeaderboardView(APIView):
 
 
 class MyRankView(APIView):
-    serializer_class = MyRankSerializer
+    serializer_class = UserSerializer
     lookup_field = "uuid"
 
     @extend_schema(
         request=serializer_class,
         responses={
             200: OpenApiResponse(
-                response=MyRankSerializer,
+                response=UserSerializer,
                 description="Score and Rank fetched successfully",
             ),
         },

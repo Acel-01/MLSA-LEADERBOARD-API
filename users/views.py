@@ -1,6 +1,6 @@
 from djoser import signals
 from djoser.conf import settings
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from leaderboard.leaderboard import Leaderboard
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny
@@ -11,7 +11,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from users.models import User
-from users.serializers import UserSerializer
+from users.serializers import (
+    MyTokenObtainPairResponseSerializer,
+    MyTokenObtainPairSerializer,
+    UserSerializer,
+)
 
 leaderboard_name = "mlsa-leaderboard"
 redis_mlsa_leaderboard = Leaderboard(leaderboard_name)
@@ -54,8 +58,16 @@ class UserCreate(generics.CreateAPIView):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     # throttle_classes = [AnonRateThrottle]
+    serializer_class = MyTokenObtainPairSerializer
 
-    @extend_schema(tags=["Authentication"])
+    @extend_schema(
+        tags=["Authentication"],
+        responses={
+            200: OpenApiResponse(
+                response=MyTokenObtainPairResponseSerializer,
+            ),
+        },
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 

@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from leaderboard_app.models import Submit
-from users.models import User
 from users.serializers import UserSerializer
 
 
@@ -29,10 +28,3 @@ class LeaderboardSerializer(serializers.Serializer):
     member = serializers.CharField(max_length=200)
     rank = serializers.IntegerField()
     score = serializers.FloatField()
-
-
-class MyRankSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["uuid", "email", "username", "total_points"]
-        read_only_fields = ["total_points"]
