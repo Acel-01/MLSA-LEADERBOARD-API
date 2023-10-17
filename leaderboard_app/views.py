@@ -66,6 +66,15 @@ class SubmitCreateView(APIView):
         api_url = f"https://api.github.com/repos/{list_url[3]}/{list_url[4]}/pulls/{list_url[6]}"
         r = requests.get(api_url)
 
+        if r.status_code == 404:
+            raise serializers.ValidationError(
+                {
+                    "pr_link": [
+                        "Invalid! This PR is from a private repository or it does not exist."
+                    ]
+                }
+            )
+
         if self.request.user.username != r.json().get("user").get("login"):
             raise serializers.ValidationError(
                 {"pr_link": ["Your Github username does not match this Pull Request"]}
