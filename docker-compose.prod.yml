@@ -22,6 +22,7 @@ services:
     env_file:
       - ./.env.prod.db
   nginx:
+    container_name: web_server
     restart: on-failure
     image: jonasal/nginx-certbot:latest
     env_file:
