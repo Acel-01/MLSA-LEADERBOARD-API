@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
-import dj_database_url
 from decouple import config
 from leaderboard.leaderboard import Leaderboard
 from redis import ConnectionPool
@@ -90,19 +89,25 @@ WSGI_APPLICATION = "mlsa_leaderboard.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 
-if config("DJANGO_DEBUG", default=False, cast=bool) is True:
-    DATABASES = {"default": dj_database_url.config(default="sqlite:///db.sqlite3")}
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": config("DB_NAME"),
-            "HOST": config("DB_HOST"),
-            "USER": config("DB_USER"),
-            "PASSWORD": config("DB_PASS"),
-            "OPTIONS": {"sslmode": "require"},
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": config("DB_ENGINE"),
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),
+        "PORT": 5432,
     }
+}
+# For Azure DB
+# "default": {
+#     "ENGINE": "django.db.backends.postgresql",
+#     "NAME": config("DB_NAME"),
+#     "HOST": config("DB_HOST"),
+#     "USER": config("DB_USER"),
+#     "PASSWORD": config("DB_PASS"),
+#     "OPTIONS": {"sslmode": "require"},
+# }
 
 
 # Password validation
@@ -142,6 +147,7 @@ AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -183,7 +189,7 @@ CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")
 
 # REDIS
-REDIS_HOST = config("REDIS_HOST", default="localhost")
+REDIS_HOST = config("REDIS_HOST", default="redis")
 REDIS_PORT = config("REDIS_PORT", default=6379)
 REDIS_PASSWORD = config("REDIS_PASSWORD", default=None)
 
