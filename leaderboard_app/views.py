@@ -76,11 +76,29 @@ class SubmitCreateView(APIView):
                     }
                 )
 
+            if "hacktoberfest" not in r.json().get("base").get("repo").get("topics"):
+                raise serializers.ValidationError(
+                    {
+                        "pr_link": [
+                            "This repository is not participating in Hacktoberfest"
+                        ]
+                    }
+                )
+
             if self.request.user.username != r.json().get("user").get("login"):
                 raise serializers.ValidationError(
                     {
                         "pr_link": [
                             "Your Github username does not match this Pull Request"
+                        ]
+                    }
+                )
+
+            if "2023-10-01T00:00:00Z" > r.json().get("created_at"):
+                raise serializers.ValidationError(
+                    {
+                        "pr_link": [
+                            "This Pull Request was created before October 1st, 2023"
                         ]
                     }
                 )
@@ -108,8 +126,7 @@ class SubmitCreateView(APIView):
             request.user.save()
             serializer.save(points=points, user=self.request.user)
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            print(f"something broke, haha. Here's the error\n{e}")
+        except IndexError:
             raise serializers.ValidationError({"pr_link": ["This link is invalid"]})
 
 
