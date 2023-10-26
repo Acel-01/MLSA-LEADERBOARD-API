@@ -125,4 +125,4 @@ Set the returned value as the value of SECRET_KEY in the .env.dev file
 
 **7. Start the development server:**
 
-    docker-compose -f local.yml
+    docker-compose -f local.yml up
